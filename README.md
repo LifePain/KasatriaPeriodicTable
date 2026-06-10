@@ -5,16 +5,38 @@ official [css3d_periodictable](https://threejs.org/examples/#css3d_periodictable
 example. 200 people from a Google Sheet are rendered as tiles, color-coded by
 net worth, and arranged in four animated layouts.
 
-**Live demo:** `<YOUR_DEPLOYED_URL_HERE>`
+## 🔗 Live demo
+
+**https://lifepain.github.io/KasatriaPeriodicTable/**
+
+**How to review:** open the link, sign in with any Google account, then use the
+buttons at the bottom (TABLE / SPHERE / HELIX / GRID) to switch layouts.
+Drag to orbit, scroll to zoom.
+
+## Screenshots
+
+| Table (20×10) | Sphere |
+|---|---|
+| ![Table layout](docs/Table.png) | ![Sphere layout](docs/Sphere.png) |
+
+| Double Helix | Grid (5×4×10) |
+|---|---|
+| ![Double helix layout](docs/Helix.png) | ![Grid layout](docs/Grid.png) |
 
 ## Features
 
-- **Google Sign-In gate** (Google Identity Services) — the visualization only loads after authentication; signed-in user's name and avatar shown with a sign-out option
-- **Live data from Google Sheets** (Sheets API v4, read-only, API-key access)
-- **Tile design per spec:** country (top-left), rank (top-right), photo (center), name and interest (bottom)
-- **Net worth color tiers:** Red < $100K · Orange $100K–$200K · Green > $200K, plus a LOW→HIGH legend
-- **Four layouts:** Table (20×10), Sphere, **double** Helix, Grid (5×4×10) with tweened transitions
-- Loading spinner, descriptive error states with retry, broken-image fallback, responsive UI
+- **Google Sign-In gate** (Google Identity Services) — the visualization only
+  loads after authentication; the signed-in user's name and avatar are shown
+  with a sign-out option
+- **Live data from Google Sheets** (Sheets API v4, read-only)
+- **Tile design per spec:** country (top-left), rank (top-right), photo
+  (center), name and interest (bottom)
+- **Net worth color tiers:** Red < $100K · Orange $100K–$200K · Green > $200K,
+  with a LOW→HIGH legend
+- **Four layouts:** Table (20×10), Sphere, **double** Helix, Grid (5×4×10)
+  with tweened transitions
+- Loading spinner, descriptive error states with retry, broken-image fallback,
+  responsive UI
 
 ## Architecture
 
@@ -39,58 +61,40 @@ evenly along the vertical axis; `theta = sqrt(n·π)·phi` spirals them around i
 Each tile `lookAt`s a point radially outward so it faces away from center.
 
 **Double helix:** tiles alternate between two strands (`strand = i % 2`). Both
-strands share the same angular step (`idx · 0.30` rad) and vertical drop
-(14px/step), but the second strand's angle is offset by **π (180°)** so it
-winds exactly opposite the first — the classic DNA silhouette.
-`setFromCylindricalCoords(800, θ, y)` places tiles on the cylinder surface.
+strands share the same angular step and vertical drop per step, but the second
+strand's angle is offset by **π (180°)** so it winds exactly opposite the
+first — the classic DNA silhouette. `setFromCylindricalCoords` places tiles on
+the cylinder surface, and each tile `lookAt`s a point radially outward so it
+stays tangent to the cylinder.
 
 **Grid (5×4×10):** index decomposition with mixed radix —
 `x = i % 5`, `y = floor(i/5) % 4`, `z = floor(i/20)`.
 5 × 4 × 10 = 200 slots = exactly the dataset size.
 
-## Setup
+## Setup (reproducing this project)
 
-### 1. Google Sheet
-1. Create a sheet, **File → Import** the provided CSV.
-2. Share → *Anyone with the link: Viewer*, and share with `lisa@kasatria.com`.
-3. Copy the sheet ID from the URL into `js/config.js` → `SHEET_ID`.
+1. **Google Sheet:** import the CSV, set sharing to *Anyone with the link –
+   Viewer*, copy the sheet ID into `js/config.js`.
+2. **Google Cloud:** enable the Sheets API; create an API key (restricted to
+   the Sheets API + this site's referrers) and an OAuth Web Client ID
+   (authorized JavaScript origins: localhost + the deployed origin); publish
+   the OAuth consent screen.
+3. **Run locally:** serve over http (GIS does not work on `file://`), e.g.
+   `npx serve -l 5500`.
+4. **Deploy:** push to GitHub → Settings → Pages → deploy from `main`.
 
-### 2. Google Cloud project
-1. [console.cloud.google.com](https://console.cloud.google.com) → New project.
-2. **APIs & Services → Library** → enable *Google Sheets API*.
-3. **Credentials → Create credentials → API key** → restrict it to the Sheets
-   API and to your site (HTTP referrers). → `SHEETS_API_KEY`.
-4. **OAuth consent screen** → External → fill app name + support email → add
-   yourself as a test user (or publish).
-5. **Credentials → Create credentials → OAuth client ID → Web application** →
-   add **Authorized JavaScript origins**:
-   - `http://localhost:5500` (local dev)
-   - your production origin, e.g. `https://<user>.github.io`
-   → `GOOGLE_CLIENT_ID`.
-
-### 3. Run locally
-GIS requires an http(s) origin (not `file://`):
-
-```bash
-npx serve .        # or: python3 -m http.server 5500
-```
-
-### 4. Deploy (GitHub Pages)
-```bash
-git init && git add . && git commit -m "feat: initial release"
-git remote add origin https://github.com/<user>/<repo>.git
-git push -u origin main
-```
-Repo → Settings → Pages → Deploy from branch → `main` / root.
-Then add the resulting origin to the OAuth client's authorized origins.
-
-## Assumptions & trade-offs
+## Assumptions & design notes
 
 - The spec lists Orange **>** $100K and Green **>** $200K; boundaries are
   resolved as Red < 100K, Orange [100K, 200K], Green > 200K.
-- The CSV's ` Net Worth ` header contains stray spaces; headers are trimmed at
-  parse time so the sheet never needs manual editing.
-- API key + client ID are public-by-design identifiers for client-side apps;
-  protection comes from referrer/origin restrictions in Google Cloud Console.
-- No framework/build step: the assignment is an adaptation of a vanilla
-  Three.js demo, so vanilla ES modules keep it faithful and easy to review.
+- The source CSV's ` Net Worth ` header contains stray spaces; headers are
+  trimmed at parse time so the sheet never needs manual editing.
+- The helix angular step and vertical pitch were increased from the demo
+  defaults so the two strands are visually distinguishable as a double helix.
+- `config.js` is committed intentionally: in a no-backend static app these
+  values are visible to the browser regardless. The API key is protected by
+  HTTP-referrer restriction and is scoped to the Sheets API only; the OAuth
+  Client ID is a public identifier by design. No client secret is used or
+  stored anywhere in this project.
+- No framework/build step: the assignment adapts a vanilla Three.js demo, so
+  vanilla ES modules keep it faithful and easy to review.
