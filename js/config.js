@@ -8,14 +8,10 @@
  * Google Cloud Console (HTTP referrer restrictions + authorized origins).
  */
 window.APP_CONFIG = {
-  // OAuth 2.0 Client ID (Web application) from Google Cloud Console
   GOOGLE_CLIENT_ID: "814809139964-72bl23qt9jnb4b6h453bmt80dnh7ggrv.apps.googleusercontent.com",
 
-  // API key restricted to the Google Sheets API + your domains
   SHEETS_API_KEY: "AIzaSyBumT_6L3SHBhgvpgzD2zQFTdmYhw7y2ZY",
 
-  // The ID from your sheet URL:
-  // https://docs.google.com/spreadsheets/d/<THIS_PART>/edit
   SHEET_ID: "1pipkgnOT7ATYyQscUCK2sAsapNSlrEs2B5FVXbi32_4",
 
   // Tab name + range. A1:F201 = header row + 200 data rows, 6 columns.
