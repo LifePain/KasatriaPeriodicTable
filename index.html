@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kasatria 3D Periodic Table</title>
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Google Identity Services (Sign in with Google) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Import map: lets us use bare module specifiers for Three.js (r160) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- ===================== LOGIN GATE (Image A) ===================== -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <h1>Welcome Back</h1>
+      <p>Sign in to view the Kasatria 3D data visualization.</p>
+      <div id="gsi-button"></div>
+      <p id="login-error" class="login-error" hidden></p>
+    </div>
+  </div>
+
+  <!-- ===================== APP ===================== -->
+  <div id="app" hidden>
+
+    <!-- Signed-in user chip + sign out -->
+    <div id="user-chip" class="user-chip">
+      <img id="user-avatar" alt="" referrerpolicy="no-referrer" />
+      <span id="user-name"></span>
+      <button id="signout-btn" type="button">Sign out</button>
+    </div>
+
+    <!-- 3D canvas mounts here -->
+    <div id="container"></div>
+
+    <!-- Layout switcher -->
+    <div id="menu">
+      <button id="table"  type="button">TABLE</button>
+      <button id="sphere" type="button">SPHERE</button>
+      <button id="helix"  type="button">HELIX</button>
+      <button id="grid"   type="button">GRID</button>
+    </div>
+
+    <!-- Net worth legend (Image B) -->
+    <div id="legend">
+      <span>LOW</span>
+      <div class="legend-bar"></div>
+      <span>HIGH</span>
+    </div>
+
+    <!-- Loading / error states -->
+    <div id="loader" class="status" hidden>
+      <div class="spinner"></div>
+      <p>Loading data from Google Sheets…</p>
+    </div>
+    <div id="error-banner" class="status" hidden>
+      <p id="error-message">Could not load data.</p>
+      <button id="retry-btn" type="button">Retry</button>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
