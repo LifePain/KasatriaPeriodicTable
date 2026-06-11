@@ -3,14 +3,14 @@
 A 3D data visualization built on the Three.js **CSS3DRenderer**, adapted from the
 official [css3d_periodictable](https://threejs.org/examples/#css3d_periodictable)
 example. 200 people from a Google Sheet are rendered as tiles, color-coded by
-net worth, and arranged in four animated layouts.
+net worth, and arranged in five animated layouts.
 
 ## 🔗 Live demo
 
 **https://lifepain.github.io/KasatriaPeriodicTable/**
 
 **How to review:** open the link, sign in with any Google account, then use the
-buttons at the bottom (TABLE / SPHERE / HELIX / GRID) to switch layouts.
+buttons at the bottom (TABLE / SPHERE / HELIX / GRID / TETRA) to switch layouts.
 Drag to orbit, scroll to zoom.
 
 ## Screenshots
@@ -23,6 +23,10 @@ Drag to orbit, scroll to zoom.
 |---|---|
 | ![Double helix layout](docs/Helix.png) | ![Grid layout](docs/Grid.png) |
 
+| Tetrahedron (4 × 50) |
+|---|
+| ![Tetrahedron layout](docs/Tetrahedron.png) |
+
 ## Features
 
 - **Google Sign-In gate** (Google Identity Services) — the visualization only
@@ -33,8 +37,8 @@ Drag to orbit, scroll to zoom.
   (center), name and interest (bottom)
 - **Net worth color tiers:** Red < $100K · Orange $100K–$200K · Green > $200K,
   with a LOW→HIGH legend
-- **Four layouts:** Table (20×10), Sphere, **double** Helix, Grid (5×4×10)
-  with tweened transitions
+- **Five layouts:** Table (20×10), Sphere, **double** Helix, Grid (5×4×10),
+  and Tetrahedron (4 faces × 50 tiles) with tweened transitions
 - Loading spinner, descriptive error states with retry, broken-image fallback,
   responsive UI
 
@@ -70,6 +74,16 @@ stays tangent to the cylinder.
 **Grid (5×4×10):** index decomposition with mixed radix —
 `x = i % 5`, `y = floor(i/5) % 4`, `z = floor(i/20)`.
 5 × 4 × 10 = 200 slots = exactly the dataset size.
+
+**Tetrahedron (4 faces × 50 tiles):** a regular tetrahedron's vertices sit at
+alternating corners of a cube — (1,1,1), (1,−1,−1), (−1,1,−1), (−1,−1,1) —
+scaled to the target size. Tiles are assigned 50 per face and positioned with
+**barycentric coordinates**: each face is filled as a triangular grid, and a
+tile's position is the weighted blend `P = u·A + v·B + w·C` of the face's
+three corners, where `u + v + w = 1`. A small inset on the weights keeps
+tiles clear of face edges, and each tile `lookAt`s along its face normal so
+it lies flat on the surface. Added post-submission as a feature-branch PR to
+demonstrate extending the layout system.
 
 ## Setup (reproducing this project)
 

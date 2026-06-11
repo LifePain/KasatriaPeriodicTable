@@ -14,7 +14,7 @@ import { fetchPeople } from "./data.js";
 let camera, scene, renderer, controls;
 
 const objects = [];                                  // CSS3DObjects (one per person)
-const targets = { table: [], sphere: [], helix: [], grid: [] };
+const targets = { table: [], sphere: [], helix: [], grid: [], tetrahedron: [] };
 
 const loader = document.getElementById("loader");
 const errorBanner = document.getElementById("error-banner");
@@ -185,6 +185,69 @@ function init(people) {
     targets.grid.push(target);
   }
 
+  /* ---------------- TETRAHEDRON: 4 faces × 50 tiles ----------------
+ * A regular tetrahedron has vertices at alternating cube corners:
+ * (1,1,1), (1,-1,-1), (-1,1,-1), (-1,-1,1) — scaled by R.
+ * Each of the 4 faces is the triangle formed by leaving one vertex out.
+ *
+ * Tiles are placed on a face with BARYCENTRIC coordinates (u, v, w):
+ *   P = u·A + v·B + w·C   where u + v + w = 1
+ * We fill each face as a triangular grid of `rows` rows: row r holds
+ * r+1 tiles, so `rows` rows hold rows(rows+1)/2 slots. rows=10 gives 55
+ * slots for 50 tiles — the last row is simply left partially filled.
+ * Tiles lookAt along the face's outward normal so they lie flat on it.
+ */
+  {
+    const R = 1300 ; // circumradius — sized so faces fit ~50 tiles
+    const V = [
+      new THREE.Vector3(1, 1, 1).multiplyScalar(R / Math.sqrt(3)),
+      new THREE.Vector3(1, -1, -1).multiplyScalar(R / Math.sqrt(3)),
+      new THREE.Vector3(-1, 1, -1).multiplyScalar(R / Math.sqrt(3)),
+      new THREE.Vector3(-1, -1, 1).multiplyScalar(R / Math.sqrt(3)),
+    ];
+    // Each face's corner indices, ordered so normals point outward
+    const faces = [[0, 1, 2], [0, 3, 1], [0, 2, 3], [1, 3, 2]];
+
+    const perFace = Math.ceil(n / faces.length); // 50
+    const rows = 10;                             // 10·11/2 = 55 ≥ 50
+    const inset = 0.12; // pull tiles slightly inward from face edges
+
+    for (let i = 0; i < n; i++) {
+      const face = faces[Math.floor(i / perFace)];
+      const k = i % perFace;                     // index within this face
+
+      // Convert k -> (row, col) in the triangular grid
+      const row = Math.floor((-1 + Math.sqrt(1 + 8 * k)) / 2);
+      const col = k - (row * (row + 1)) / 2;
+
+      // Barycentric coords: rows sweep A->BC edge; col sweeps B->C
+      let u = 1 - row / (rows - 1);
+      let t = row === 0 ? 0 : col / row;
+      let v = (1 - u) * (1 - t);
+      let w = (1 - u) * t;
+
+      // Inset from edges so tiles don't overlap face boundaries
+      u = u * (1 - 3 * inset) + inset;
+      v = v * (1 - 3 * inset) + inset;
+      w = w * (1 - 3 * inset) + inset;
+
+      const [A, B, C] = [V[face[0]], V[face[1]], V[face[2]]];
+      const target = new THREE.Object3D();
+      target.position
+        .copy(A).multiplyScalar(u)
+        .addScaledVector(B, v)
+        .addScaledVector(C, w);
+
+      // Face the tile outward along the face normal
+      const normal = new THREE.Vector3()
+        .subVectors(B, A).cross(new THREE.Vector3().subVectors(C, A))
+        .normalize();
+      target.lookAt(target.position.clone().add(normal));
+
+      targets.tetrahedron.push(target);
+    }
+  }
+
   // ---- Renderer + controls ----
   renderer = new CSS3DRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -196,7 +259,7 @@ function init(people) {
   controls.addEventListener("change", render);
 
   // ---- Layout buttons ----
-  for (const key of ["table", "sphere", "helix", "grid"]) {
+  for (const key of ["table", "sphere", "helix", "grid", "tetrahedron"]) {
     document.getElementById(key).addEventListener("click", () => {
       setActiveButton(key);
       transform(targets[key], 2000);
